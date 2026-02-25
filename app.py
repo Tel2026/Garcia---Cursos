@@ -2,27 +2,27 @@ import streamlit as st
 import pandas as pd
 
 # ==============================
-# CONFIGURACIÓN
+# CONFIGURACIÓN GENERAL
 # ==============================
-st.set_page_config(page_title="Acceso Fotocheck", layout="centered")
+st.set_page_config(
+    page_title="Acceso Fotocheck",
+    layout="centered"
+)
 
 SHEET_ID = "1OOHc3TDqbJOEq9at_AAH8LCbnXIBZcQW"
 SHEET_NAME = "Hoja1"
 
-# Carpeta RAÍZ pública
-CARPETA_RAIZ_ID = "1a_bkWkTuBXki2h764PloetZ8SI_3aYB5"
-
 # ==============================
-# CARGA DE DATOS
+# CARGA DE BASE DE DATOS
 # ==============================
-url = (
+SHEET_URL = (
     f"https://docs.google.com/spreadsheets/d/{SHEET_ID}"
     f"/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
 )
 
 @st.cache_data
 def cargar_bd():
-    return pd.read_csv(url)
+    return pd.read_csv(SHEET_URL)
 
 df = cargar_bd()
 
@@ -31,9 +31,11 @@ df = cargar_bd()
 # ==============================
 st.title("🔐 Acceso a Evidencias")
 
+st.write("Ingrese su **fotocheck** para acceder a sus evidencias")
+
 fotocheck = st.text_input(
-    "Ingrese su Fotocheck",
-    placeholder="Ej: 1314870"
+    "Fotocheck",
+    placeholder="Ej: 1353612"
 )
 
 if fotocheck:
@@ -41,23 +43,22 @@ if fotocheck:
 
     resultado = df[df["Fotocheck"].astype(str) == fotocheck]
 
-    if not resultado.empty:
+    if resultado.empty:
+        st.error("❌ Fotocheck no encontrado en la base de datos")
+    else:
         nombre = resultado.iloc[0]["Nombre y Apellidos"]
 
         st.success(f"👤 Bienvenido {nombre}")
 
-        # 🔎 BÚSQUEDA EN DRIVE POR FOTOCHECK
-        link_drive = (
-            "https://drive.google.com/drive/search?q="
-            + fotocheck
-            + "%20in%3Aparents%20"
-            + CARPETA_RAIZ_ID
-        )
+        # 🔎 BÚSQUEDA GLOBAL EN DRIVE (PÚBLICA)
+        link_drive = f"https://drive.google.com/drive/search?q={fotocheck}"
 
         st.link_button(
-            "📂 Abrir carpeta de evidencias",
+            "📂 Buscar carpeta de evidencias",
             link_drive
         )
 
-    else:
-        st.error("❌ Fotocheck no válido")
+        st.info(
+            "🔍 Se abrirá Google Drive filtrado por su fotocheck.\n\n"
+            "Seleccione la carpeta correspondiente."
+        )
